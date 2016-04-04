@@ -16,16 +16,29 @@ import java.math.BigInteger;
  */
 public class Fermat extends Task{
 	
-	IntVbl counter = new IntVbl.Sum();
-	int number;
+	boolean cont 	= true; 				//Used to gracefully exit
+	IntVbl counter 	= new IntVbl.Sum();		//Count of Witnesses	
+	int number;								//Argument passed in by user
 	
 	//Main must throw exception and NOT implement System.Exit(1);
 	public void main(String[] args) throws Exception{
-		if (args.length < 1) usage();
+		if (args.length != 1) usage();
 		
-		number = verifyArg(args[0]);
+		//Do not continue if no argument found
+		if (cont) number = verifyArg(args[0]);
 		
-		parallelFor (0, number - 1) .exec (new Loop()
+		//Do not continue if argument is not a number
+		if (cont) execute();
+	}
+	
+	/**
+	 * Will execute the following parallelFor thread for the
+	 * Fermat's Little Theorem for the given number p.
+	 */
+	public void execute(){
+		
+		// 2 <= a <= p-1
+		parallelFor (2, number - 1) .exec (new Loop()
 		{
 			IntVbl thrCounter;
 			BigInteger a;
@@ -51,16 +64,16 @@ public class Fermat extends Task{
 		});
 		
 		//Print number of Witnesses
-		System.out.printf ("%d%n", counter.item);
+		System.out.printf ("%d%n", counter.item);		
 	}
 	
 	/**
 	 * Print the Usage statement on how the program works
 	 * and throw an Exception to exit the pj2 program.
 	 */	
-	public void usage() throws Exception{
+	public void usage(){
 		System.err.println ("Usage: java pj2 Fermat <number>");
-		throw new IllegalArgumentException();
+		cont = false;
 	}
 	
 	/**
@@ -72,15 +85,25 @@ public class Fermat extends Task{
 	 * @return     the int provided by the user converted from a String
 	 */
 	public int verifyArg(String arg) throws Exception{
-		int num = Integer.parseInt(arg);
 		
-		//Validate where <p> is the number of type int to be 
-		//tested for compositeness; p must be 3 or greater. 
-		if (num < 3){
-			System.err.println ("Usage: <number> must be an integer >= 3");
-			throw new IllegalArgumentException();
+		int num = 0;
+		
+		try{
+			num = Integer.parseInt(arg);
+			
+			//Validate where <p> is the number of type int to be 
+			//tested for compositeness; p must be 3 or greater. 
+			if (num < 3){
+				System.err.println ("Usage: <number> must be an integer >= 3");
+				cont = false;
+			}	
 		}
-		
+		catch(NumberFormatException ex){
+			//Should only catch this for Integer.parseInt not being a number
+			System.err.println ("Usage: <number> must be a valid integer");
+			cont = false;
+		}
+
 		return num;
 	}
 }
